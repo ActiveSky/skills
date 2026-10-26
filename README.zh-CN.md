@@ -21,10 +21,10 @@ npx skills add ActiveSky/skills --global
 安装到所有受支持的智能体（而不只是当前检测到的那个）：
 
 ```shell
-npx skills add ActiveSky/skills --skill yuque-cli --global --agent '*' --copy
+npx skills add ActiveSky/skills --skill yuque-cli --global --agent '*'
 ```
 
-skill 会被放入 `~/.agents/skills/`，再链接到各智能体的 skill 目录。符号链接不可用或不想用时（例如 Windows 未开启开发者模式），加 `--copy` 改为复制。
+skill 只在 `~/.agents/skills/` 存一份，再链接到各智能体的 skill 目录（Windows 上使用目录联接），改动源文件会立即对所有智能体生效。只有确实需要独立副本时才加 `--copy`。
 
 ## 可用 skill
 
@@ -48,7 +48,7 @@ skill 会被放入 `~/.agents/skills/`，再链接到各智能体的 skill 目�
 
 1. 创建 `skills/<skill-name>/SKILL.md`，YAML frontmatter 至少包含 `name` 和 `description`。description 决定触发时机，要写清“做什么”和“什么时候用”。
 2. 保持 `SKILL.md` 聚焦。大段参考资料放 `references/`，可复用的确定性脚本放 `scripts/`。
-3. 提交并推送后重新安装：`npx skills add ActiveSky/skills --global --agent '*' --copy`。
+3. 提交并推送后重新安装：`npx skills add ActiveSky/skills --global --agent '*'`。
 
 ## 许可证
 

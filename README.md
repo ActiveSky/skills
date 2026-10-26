@@ -21,10 +21,10 @@ npx skills add ActiveSky/skills --global
 Install into every supported agent (not just the currently detected one):
 
 ```shell
-npx skills add ActiveSky/skills --skill yuque-cli --global --agent '*' --copy
+npx skills add ActiveSky/skills --skill yuque-cli --global --agent '*'
 ```
 
-Skills are placed in `~/.agents/skills/` and linked into each agent's skill directory. Pass `--copy` when symlinks are unavailable or undesirable (for example on Windows without developer mode).
+Skills are stored once in `~/.agents/skills/` and linked into each agent's skill directory (directory junctions on Windows), so editing the source updates every agent at once. Pass `--copy` only if you deliberately want independent copies.
 
 ## Available skills
 
@@ -48,7 +48,7 @@ Skills are placed in `~/.agents/skills/` and linked into each agent's skill dire
 
 1. Create `skills/<skill-name>/SKILL.md` with YAML frontmatter containing `name` and `description`. The description is the trigger — state what the skill does and when to use it.
 2. Keep `SKILL.md` focused. Move large reference material into `references/` and deterministic helpers into `scripts/`.
-3. Commit, push, then reinstall: `npx skills add ActiveSky/skills --global --agent '*' --copy`.
+3. Commit, push, then reinstall: `npx skills add ActiveSky/skills --global --agent '*'`.
 
 ## License
 
