@@ -5,29 +5,53 @@ description: 通过本机 `yuque` 命令读写语雀（Yuque）的个人知识�
 
 # 语雀读写（yuque-cli）
 
-本 skill 驱动的是 PyPI 版 `yuque-cli`：它用浏览器 cookie 调用语雀网页内部接口，因此**不需要语雀会员 Token**（官方 Open API 的个人 Token 是超级会员专属）。
+本 skill 内置 **vendored 版 `yuque-cli` 3.5.0**（来自 PyPI），用浏览器 cookie 调用语雀网页内部接口，因此**不需要语雀会员 Token**（官方 Open API 的个人 Token 是超级会员专属）。源码在 `vendor/yuque_cli/`，本地修复见 `THIRD_PARTY_NOTICES.md`。
+
+## 命令入口
+
+Windows：
+
+```powershell
+.\bootstrap.ps1                  # 首次：创建 .venv 并安装核心依赖
+.\scripts\yuque.ps1 --version
+```
+
+Unix：
+
+```bash
+./bootstrap.sh
+./scripts/yuque.sh --version
+```
+
+下文用 `yuque` 代指 `.\scripts\yuque.ps1`（Windows）或 `./scripts/yuque.sh`（Unix）。
 
 ## 最快路径
 
 ```powershell
-yuque --version
-yuque auth status
-yuque repo list
-yuque repo toc active_sky/jqxx
+.\scripts\yuque.ps1 --version
+.\scripts\yuque.ps1 auth status
+.\scripts\yuque.ps1 repo list
+.\scripts\yuque.ps1 repo toc active_sky/jqxx
 $PARENT_UUID = "6dJZphrQKAWB_eM-"   # 从 repo toc 括号里复制
-yuque doc create active_sky/jqxx -t "标题" -F note.md --parent $PARENT_UUID --private
-yuque repo toc active_sky/jqxx   # 确认文档已出现在目录树
+.\scripts\yuque.ps1 doc create active_sky/jqxx -t "标题" -F note.md --parent $PARENT_UUID --private
+.\scripts\yuque.ps1 repo toc active_sky/jqxx   # 确认文档已出现在目录树
 ```
 
 ## 环境前置
 
 ```powershell
-yuque --version          # 应输出 3.x
-yuque auth status        # 确认登录态
+.\bootstrap.ps1          # 首次：创建 .venv 并安装 httpx/mistune/typer/websocket-client
+.\scripts\yuque.ps1 --version
+.\scripts\yuque.ps1 auth status
 ```
 
-- 未安装：`uv tool install yuque-cli`
 - 会话文件：`~/.config/yuque-cli/session.json`（Windows 下为 `C:\Users\<用户名>\.config\yuque-cli\session.json`），里面是**明文完整 cookie**
+- 只有 `auth login` 需要 Playwright；不装也能读写文档。需要时：
+  ```powershell
+  .\.venv\Scripts\python.exe -m pip install "playwright>=1.52"
+  .\.venv\Scripts\python.exe -m playwright install chromium
+  ```
+- 如果你已经用 PyPI 版装过 `yuque`，也可以继续用；但本 skill 的 TOC 和大正文修复只存在于 vendored 版。
 
 `auth status` 返回 401 时不要反复重试，让用户重新登录：
 
@@ -127,14 +151,16 @@ yuque --yes doc delete active_sky/jqxx/<slug>
 - **写之前先说清楚要去哪个库、文档标题是什么、放在哪个目录，等用户确认**。语雀是用户长期积累的正式笔记，误建一篇文档比多问一句代价大。
 - 创建前先 `repo toc` 选好 `--parent`；创建后用 `repo toc` 验证是否已挂到目录树。
 - 更新前先 `doc get` 读原文，再基于原文改。`doc update` 是“先取后合并”，但覆盖正文时仍可能丢掉用户手工改过的内容。
+- 更新正文后一定要再 `doc get` 验证内容真的变了；不要只看命令返回的“已更新”。大正文尤其要检查。
 - 删除一律视为可恢复操作，但不要批量删；单篇删除前确认 slug 对应的是哪篇（看标题，不看位置）。
 - 批量导入/迁移要分批，比如每批 5–10 篇，中间停顿。内部接口有风控，高频调用会被屏蔽。
 - 不要把 `session.json` 的内容打印出来、写进仓库或发给外部服务；它等同于账号凭证。
 
 ## 已知坑
 
-- **文档创建成功但侧边栏看不到**：`doc create` 不带 `--parent` 时，文档可能只创建、不挂 TOC。用 `--parent <目录UUID>`，或创建后在网页里拖到目标位置；用 `repo toc` 验证。
-- **`doc get --json` 在 3.5.0 不存在**：命令描述可能提到，但选项列表没有；以 `--help` 为准，不要把它写进自动化脚本。
+- **文档创建成功但侧边栏看不到**：`doc create` 不带 `--parent` 时，文档可能只创建、不挂 TOC。用 `--parent <目录UUID>`、`--parent ""`（顶层），或创建后在网页里拖到目标位置；用 `repo toc` 验证。
+- **大正文 `doc update` 可能只更新标题、不更新正文**：PyPI 原版在 Lake 文档/大正文上会静默失败。本 skill 的 vendored 版已修复：加 `content_modified=true`，并对 Lake 文档或 >30k 字符的正文改走 Lake HTML/ASL。若仍失败，用 `doc create --parent ""` 新建后删除旧文档。
+- **`doc get --json` 是全局选项**：要写成 `yuque --json doc get ...`，放在子命令前；写在子命令后会被 Typer 拒绝。
 - `doc list`/`doc get` 只接受两段或三段地址，单给 repo slug 必报错。
 - `auth login` 打印“已登录”不代表会话有效，必须用 `auth status` 复核。
 - `--cdp` 要求 Chrome 以 `--remote-debugging-port` 启动；用户已有 Chrome 在跑时不要选它，用默认弹窗或 `--manual` / `--cookie`。

@@ -30,7 +30,26 @@ skill 只在 `~/.agents/skills/` 存一份，再链接到各智能体的 skill �
 
 | Skill | 说明 | 前置依赖 |
 | --- | --- | --- |
-| [`yuque-cli`](skills/yuque-cli/SKILL.md) | 通过本机 `yuque` 命令读写语雀知识库与文档。采用 cookie 认证，无需付费的语雀 API Token。 | `uv tool install yuque-cli` |
+| [`yuque-cli`](skills/yuque-cli/SKILL.md) | 通过内置的 `yuque-cli` 3.5.0 读写语雀知识库与文档。采用 cookie 认证，无需付费的语雀 API Token。 | `uv` + `skills/yuque-cli/bootstrap.ps1` |
+
+## 内置 CLI（vendored）
+
+`yuque-cli` skill 把 PyPI 包 [`yuque-cli` 3.5.0](https://pypi.org/project/yuque-cli/) 的源码放在 [`skills/yuque-cli/vendor/`](skills/yuque-cli/vendor/)。上游包的元数据没有声明作者或许可证；来源、署名和本地修改见 [`THIRD_PARTY_NOTICES.md`](skills/yuque-cli/THIRD_PARTY_NOTICES.md)。
+
+安装 skill 后，先初始化 Python 环境：
+
+```powershell
+cd ~/.agents/skills/yuque-cli
+./bootstrap.ps1
+./scripts/yuque.ps1 auth status
+```
+
+本地优化：
+
+- `--parent ""` 把文档放到目录树顶层；`--parent <uuid>` 放到指定目录下。
+- 大正文更新使用 `content_modified=true`，并对 Lake 文档或超过 30k 字符的正文改走 Lake HTML/ASL，修复“只更新标题、正文不变”的静默失败。
+- Playwright 改为懒加载；只有 `auth login` 需要它。
+- 补充 `yuque --json doc get ...`（全局选项放在子命令前）的用法。
 
 ## 仓库结构
 
@@ -41,7 +60,16 @@ skill 只在 `~/.agents/skills/` 存一份，再链接到各智能体的 skill �
 ├── LICENSE
 └── skills/
     └── yuque-cli/
-        └── SKILL.md
+        ├── SKILL.md
+        ├── bootstrap.ps1 / bootstrap.sh
+        ├── requirements.txt
+        ├── THIRD_PARTY_NOTICES.md
+        ├── scripts/
+        │   ├── yuque.py
+        │   ├── yuque.ps1
+        │   └── yuque.sh
+        └── vendor/
+            └── yuque_cli/  (vendored 3.5.0, 13 files)
 ```
 
 ## 新增 skill
@@ -52,4 +80,4 @@ skill 只在 `~/.agents/skills/` 存一份，再链接到各智能体的 skill �
 
 ## 许可证
 
-[MIT](LICENSE)
+本仓库自己的代码与文档使用 [MIT](LICENSE)。vendored 的 `yuque-cli` 源码单独署名于 [`skills/yuque-cli/THIRD_PARTY_NOTICES.md`](skills/yuque-cli/THIRD_PARTY_NOTICES.md)；上游包未声明许可证。
