@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "skills/lark-plus/**"
+      - ".github/workflows/**"
   workflow_dispatch:
 
 permissions:
@@ -14,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Validate vendored skills
         run: pwsh ./skills/lark-plus/scripts/validate-lark-plus.ps1

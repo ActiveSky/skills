@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: "0 3 * * 1"
   workflow_dispatch:
+    inputs:
+      force:
+        description: "Force sync even if UPSTREAM_VERSION matches"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -18,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -39,7 +44,7 @@ jobs:
           if [ -f skills/lark-plus/UPSTREAM_VERSION ]; then
             current="$(sed -n 's/^tag: //p' skills/lark-plus/UPSTREAM_VERSION)"
           fi
-          if [ "$current" = "${{ steps.upstream.outputs.tag }}" ]; then
+          if [ "$current" = "${{ steps.upstream.outputs.tag }}" ] && [ "${{ inputs.force }}" != "true" ]; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
