@@ -1,0 +1,95 @@
+name: Sync lark-plus
+
+on:
+  schedule:
+    - cron: "0 3 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: sync-lark-plus
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get latest upstream release
+        id: upstream
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="$(gh release view --repo larksuite/cli --json tagName -q .tagName)"
+          sha="$(gh api "repos/larksuite/cli/commits/${tag}" --jq .sha)"
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+          echo "sha=${sha}" >> "$GITHUB_OUTPUT"
+
+      - name: Compare with vendored version
+        id: check
+        run: |
+          current=""
+          if [ -f skills/lark-plus/UPSTREAM_VERSION ]; then
+            current="$(sed -n 's/^tag: //p' skills/lark-plus/UPSTREAM_VERSION)"
+          fi
+          if [ "$current" = "${{ steps.upstream.outputs.tag }}" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Sync vendored skills
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          pwsh ./skills/lark-plus/scripts/sync-lark-skills.ps1 \
+            -Tag "${{ steps.upstream.outputs.tag }}" \
+            -Commit "${{ steps.upstream.outputs.sha }}"
+
+      - name: Open/update PR and auto-merge
+        if: steps.check.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          branch="chore/sync-lark-plus"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$branch"
+          git add skills/lark-plus
+
+          if git diff --cached --quiet; then
+            echo "No file changes"
+            exit 0
+          fi
+
+          git commit -m "chore(lark-plus): sync upstream ${{ steps.upstream.outputs.tag }}"
+          git push --force origin "$branch"
+
+          pr="$(gh pr list --state open --head "$branch" --json number -q '.[0].number')"
+          if [ -z "$pr" ]; then
+            gh pr create \
+              --title "chore(lark-plus): sync upstream ${{ steps.upstream.outputs.tag }}" \
+              --body "Automated sync from larksuite/cli ${{ steps.upstream.outputs.tag }} (${{ steps.upstream.outputs.sha }})." \
+              --base "${{ github.event.repository.default_branch }}" \
+              --head "$branch"
+            pr="$(gh pr list --state open --head "$branch" --json number -q '.[0].number')"
+          fi
+
+          merged=false
+          for attempt in 1 2 3 4 5; do
+            if gh pr merge "$pr" --auto --squash --delete-branch; then
+              merged=true
+              break
+            fi
+            sleep 10
+          done
+          if [ "$merged" != "true" ]; then
+            echo "Failed to enable auto-merge for PR #$pr" >&2
+            exit 1
+          fi
