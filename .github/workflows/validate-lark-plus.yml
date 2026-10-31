@@ -1,7 +1,9 @@
 name: Validate lark-plus
 
 on:
-  pull_request:
+  push:
+    branches:
+      - main
     paths:
       - "skills/lark-plus/**"
       - ".github/workflows/**"
