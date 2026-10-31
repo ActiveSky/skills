@@ -31,6 +31,7 @@ skill 只在 `~/.agents/skills/` 存一份，再链接到各智能体的 skill �
 | Skill | 说明 | 前置依赖 |
 | --- | --- | --- |
 | [`yuque-cli`](skills/yuque-cli/SKILL.md) | 通过内置的 `yuque-cli` 3.5.0 读写语雀知识库与文档。采用 cookie 认证，无需付费的语雀 API Token。 | `uv` + `skills/yuque-cli/bootstrap.ps1` |
+| [`lark-plus`](skills/lark-plus/SKILL.md) | 飞书官方 28 个 skill 的统一入口（文档、云空间、多维表格、表格、消息、日历、邮件、任务、会议、知识库、OKR、审批等）。依赖官方 `lark-cli`；内置快照由 `larksuite/cli` release 自动同步。 | `lark-cli` |
 
 ## 内置 CLI（vendored）
 
@@ -51,6 +52,17 @@ cd ~/.agents/skills/yuque-cli
 - Playwright 改为懒加载；只有 `auth login` 需要它。
 - 补充 `yuque --json doc get ...`（全局选项放在子命令前）的用法。
 
+## 内置飞书 skills
+
+`lark-plus` 把官方 [`larksuite/cli`](https://github.com/larksuite/cli) 的 skills 内置在 `skills/lark-plus/lark-*/` 下。快照由 [`.github/workflows/sync-lark-plus.yml`](.github/workflows/sync-lark-plus.yml) 从上游最新 release 自动同步；同步的 tag 和 commit 记录在 `skills/lark-plus/UPSTREAM_VERSION`。上游使用 MIT 许可证，见 [`skills/lark-plus/UPSTREAM_LICENSE`](skills/lark-plus/UPSTREAM_LICENSE)。
+
+本地同步与校验：
+
+```powershell
+./skills/lark-plus/scripts/sync-lark-skills.ps1 -Tag v1.0.98
+./skills/lark-plus/scripts/validate-lark-plus.ps1
+```
+
 ## 仓库结构
 
 ```text
@@ -58,18 +70,29 @@ cd ~/.agents/skills/yuque-cli
 ├── README.md
 ├── README.zh-CN.md
 ├── LICENSE
+├── .github/
+│   └── workflows/
+│       └── sync-lark-plus.yml
 └── skills/
-    └── yuque-cli/
+    ├── yuque-cli/
+    │   ├── SKILL.md
+    │   ├── bootstrap.ps1 / bootstrap.sh
+    │   ├── requirements.txt
+    │   ├── THIRD_PARTY_NOTICES.md
+    │   ├── scripts/
+    │   │   ├── yuque.py
+    │   │   ├── yuque.ps1
+    │   │   └── yuque.sh
+    │   └── vendor/
+    │       └── yuque_cli/  (vendored 3.5.0, 13 files)
+    └── lark-plus/
         ├── SKILL.md
-        ├── bootstrap.ps1 / bootstrap.sh
-        ├── requirements.txt
-        ├── THIRD_PARTY_NOTICES.md
-        ├── scripts/
-        │   ├── yuque.py
-        │   ├── yuque.ps1
-        │   └── yuque.sh
-        └── vendor/
-            └── yuque_cli/  (vendored 3.5.0, 13 files)
+        ├── UPSTREAM_VERSION
+        ├── UPSTREAM_LICENSE
+        ├── lark-*/  (28 vendored official skills)
+        └── scripts/
+            ├── sync-lark-skills.ps1
+            └── validate-lark-plus.ps1
 ```
 
 ## 新增 skill
@@ -80,4 +103,4 @@ cd ~/.agents/skills/yuque-cli
 
 ## 许可证
 
-本仓库自己的代码与文档使用 [MIT](LICENSE)。vendored 的 `yuque-cli` 源码单独署名于 [`skills/yuque-cli/THIRD_PARTY_NOTICES.md`](skills/yuque-cli/THIRD_PARTY_NOTICES.md)；上游包未声明许可证。
+本仓库自己的代码与文档使用 [MIT](LICENSE)。vendored 的 `yuque-cli` 源码单独署名于 [`skills/yuque-cli/THIRD_PARTY_NOTICES.md`](skills/yuque-cli/THIRD_PARTY_NOTICES.md)；上游包未声明许可证。内置的飞书 skills 来自 [`larksuite/cli`](https://github.com/larksuite/cli)，按 MIT 许可证使用，见 [`skills/lark-plus/UPSTREAM_LICENSE`](skills/lark-plus/UPSTREAM_LICENSE)。

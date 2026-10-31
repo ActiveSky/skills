@@ -1,0 +1,20 @@
+name: Validate lark-plus
+
+on:
+  pull_request:
+    paths:
+      - "skills/lark-plus/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate vendored skills
+        run: pwsh ./skills/lark-plus/scripts/validate-lark-plus.ps1
