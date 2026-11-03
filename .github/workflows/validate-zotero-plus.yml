@@ -1,0 +1,28 @@
+name: Validate zotero-plus
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "skills/zotero-plus/**"
+      - "scripts/**"
+      - ".github/workflows/validate-zotero-plus.yml"
+  pull_request:
+    paths:
+      - "skills/zotero-plus/**"
+      - "scripts/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Validate vendored skill
+        run: pwsh ./scripts/validate-zotero-plus.ps1

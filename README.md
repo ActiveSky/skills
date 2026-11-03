@@ -32,6 +32,7 @@ Skills are stored once in `~/.agents/skills/` and linked into each agent's skill
 | --- | --- | --- |
 | [`yuque-cli`](skills/yuque-cli/SKILL.md) | Read and write Yuque (语雀) knowledge bases and documents through a vendored `yuque-cli` 3.5.0 CLI. Uses cookie-based authentication, so no paid Yuque API token is needed. | `uv` + `skills/yuque-cli/bootstrap.ps1` |
 | [`lark-plus`](skills/lark-plus/SKILL.md) | Single-entry router for the official 28 Lark/Feishu skills (docs, Drive, Base, Sheets, IM, calendar, mail, tasks, meetings, wiki, OKR, approvals, and more). Uses the official `lark-cli`; the vendored snapshot is synced from `larksuite/cli` releases. | `lark-cli` |
+| [`zotero-plus`](skills/zotero-plus/SKILL.md) | Zotero toolbox with one entry point: translate arXiv papers into Chinese PDFs, resolve preprints to their published venue with CCF/CORE tiers, and keep attachment filenames and titles consistent. The vendored snapshot is synced from `ActiveSky/zotero-plus`. | `zotero-cli` (Zotero running with its local API enabled) |
 
 ## Vendored CLI
 
@@ -63,6 +64,17 @@ Sync and validate locally:
 ./skills/lark-plus/scripts/validate-lark-plus.ps1
 ```
 
+## Vendored zotero-plus skill
+
+`zotero-plus` is developed in its own repository, [`ActiveSky/zotero-plus`](https://github.com/ActiveSky/zotero-plus), and vendored here under `skills/zotero-plus/`. [`.github/workflows/sync-zotero-plus.yml`](.github/workflows/sync-zotero-plus.yml) tracks the upstream `main` branch weekly (and on demand); the synced commit is recorded in `skills/zotero-plus/UPSTREAM_VERSION`. The upstream project is AGPL-3.0; see [`skills/zotero-plus/LICENSE`](skills/zotero-plus/LICENSE).
+
+Sync and validate locally:
+
+```powershell
+./scripts/sync-zotero-plus.ps1
+./scripts/validate-zotero-plus.ps1
+```
+
 ## Repository layout
 
 ```text
@@ -72,7 +84,13 @@ Sync and validate locally:
 ├── LICENSE
 ├── .github/
 │   └── workflows/
-│       └── sync-lark-plus.yml
+│       ├── sync-lark-plus.yml
+│       ├── sync-zotero-plus.yml
+│       ├── validate-lark-plus.yml
+│       └── validate-zotero-plus.yml
+├── scripts/
+│   ├── sync-zotero-plus.ps1
+│   └── validate-zotero-plus.ps1
 └── skills/
     ├── yuque-cli/
     │   ├── SKILL.md
@@ -85,14 +103,22 @@ Sync and validate locally:
     │   │   └── yuque.sh
     │   └── vendor/
     │       └── yuque_cli/  (vendored 3.5.0, 13 files)
-    └── lark-plus/
+    ├── lark-plus/
+    │   ├── SKILL.md
+    │   ├── UPSTREAM_VERSION
+    │   ├── UPSTREAM_LICENSE
+    │   ├── lark-*/  (28 vendored official skills)
+    │   └── scripts/
+    │       ├── sync-lark-skills.ps1
+    │       └── validate-lark-plus.ps1
+    └── zotero-plus/
         ├── SKILL.md
         ├── UPSTREAM_VERSION
-        ├── UPSTREAM_LICENSE
-        ├── lark-*/  (28 vendored official skills)
-        └── scripts/
-            ├── sync-lark-skills.ps1
-            └── validate-lark-plus.ps1
+        ├── LICENSE
+        ├── README.md / README.zh-CN.md
+        ├── data/     (ccf.json, rankings.json)
+        ├── scripts/  (translate, venue, workflow, naming)
+        └── state/
 ```
 
 ## Adding a skill
@@ -103,4 +129,4 @@ Sync and validate locally:
 
 ## License
 
-[MIT](LICENSE) for this repository's own code and documentation. The vendored `yuque-cli` source is attributed separately in [`skills/yuque-cli/THIRD_PARTY_NOTICES.md`](skills/yuque-cli/THIRD_PARTY_NOTICES.md); its upstream package does not declare a license. The vendored Lark/Feishu skills come from [`larksuite/cli`](https://github.com/larksuite/cli) and are used under the MIT license; see [`skills/lark-plus/UPSTREAM_LICENSE`](skills/lark-plus/UPSTREAM_LICENSE).
+[MIT](LICENSE) for this repository's own code and documentation. The vendored `yuque-cli` source is attributed separately in [`skills/yuque-cli/THIRD_PARTY_NOTICES.md`](skills/yuque-cli/THIRD_PARTY_NOTICES.md); its upstream package does not declare a license. The vendored Lark/Feishu skills come from [`larksuite/cli`](https://github.com/larksuite/cli) and are used under the MIT license; see [`skills/lark-plus/UPSTREAM_LICENSE`](skills/lark-plus/UPSTREAM_LICENSE). The vendored `zotero-plus` snapshot comes from [`ActiveSky/zotero-plus`](https://github.com/ActiveSky/zotero-plus) and is used under AGPL-3.0; see [`skills/zotero-plus/LICENSE`](skills/zotero-plus/LICENSE).
