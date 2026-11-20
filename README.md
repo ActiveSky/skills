@@ -33,6 +33,7 @@ Skills are stored once in `~/.agents/skills/` and linked into each agent's skill
 | [`yuque-cli`](skills/yuque-cli/SKILL.md) | Read and write Yuque (语雀) knowledge bases and documents through a vendored `yuque-cli` 3.5.0 CLI. Uses cookie-based authentication, so no paid Yuque API token is needed. | `uv` + `skills/yuque-cli/bootstrap.ps1` |
 | [`lark-plus`](skills/lark-plus/SKILL.md) | Single-entry router for the official 28 Lark/Feishu skills (docs, Drive, Base, Sheets, IM, calendar, mail, tasks, meetings, wiki, OKR, approvals, and more). Uses the official `lark-cli`; the vendored snapshot is synced from `larksuite/cli` releases. | `lark-cli` |
 | [`zotero-plus`](skills/zotero-plus/SKILL.md) | Zotero toolbox with one entry point: translate arXiv papers into Chinese PDFs, resolve preprints to their published venue with CCF/CORE tiers, and keep attachment filenames and titles consistent. The vendored snapshot is synced from `ActiveSky/zotero-plus`. | `zotero-cli` (Zotero running with its local API enabled) |
+| [`mineru-document-extractor`](skills/mineru-document-extractor/SKILL.md) | Convert PDFs, scans, images, Office documents and web pages to Markdown/HTML/LaTeX/DOCX with `mineru-open-api`: `flash-extract` is token-free up to 10 MB / 20 pages, `extract` adds a token, VLM layout analysis, multiple formats and batch mode. Vendored by hand from `opendatalab/mineru-ecosystem`. | `mineru-open-api`; `MINERU_TOKEN` for `extract`/`crawl` |
 
 ## Vendored CLI
 
